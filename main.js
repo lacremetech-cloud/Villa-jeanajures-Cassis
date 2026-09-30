@@ -206,9 +206,14 @@
   var lastFocused = null;
   var formLoaded = false;
 
-  /* Tunnel Systeme.io dédié au bien. */
-  var FORM_SCRIPT_URL =
-    'https://lecambredaze.systeme.io/public/remote/page/44251769b40171ff4121fae3e8fb34b27213ff1b.js';
+  /* Formulaire acquéreur Prodigio, dédié à ce bien. Remplace le tunnel
+     Systeme.io : la demande arrive directement dans le CRM Prodigio, rattachée
+     à la Villa Jean Jaurès, avec son attribution (UTM, fbclid) intacte. */
+  var FORM_URL = 'https://go.prodigio.fr/bien/villa-jean-jaures/interet';
+
+  /* Le formulaire publie sa hauteur au parent — et rien d'autre. Aucune
+     réponse, aucune coordonnée ne transite par ce canal. */
+  var FORM_HEIGHT_MESSAGE = 'prodigio:buyer-form:height';
 
   /* Le script n'est injecté qu'au premier clic sur un appel à l'action :
      cela évite qu'iOS Safari ouvre sa barre d'autocomplétion dès l'arrivée
@@ -241,34 +246,38 @@
       formContainer.appendChild(a);
     }
 
-    /* Systeme.io insère son iframe juste après le script lui-même
-       (document.currentScript) : il doit donc être ajouté dans ce
-       conteneur, et surtout pas dans le <head>. */
-    var script = document.createElement('script');
-    script.id = 'form-script-tag-25381637';
-    script.src = FORM_SCRIPT_URL;
-    script.async = true;
-    script.onerror = fallback;
-    formContainer.appendChild(script);
+    /* L'iframe Prodigio est insérée directement : pas de script tiers, donc
+       pas d'attente d'injection ni de MutationObserver. */
+    var frame = document.createElement('iframe');
+    frame.src = FORM_URL;
+    frame.title = 'Demander la brochure';
+    frame.loading = 'lazy';
+    frame.style.cssText = 'width:100%;border:0;min-height:520px;display:block';
+    frame.onerror = fallback;
+    formContainer.appendChild(frame);
 
-    /* L'iframe reste masqué tant que Systeme.io n'a pas renvoyé sa hauteur
-       par postMessage. On retire l'attente à ce moment précis. */
-    if ('MutationObserver' in window) {
-      var obs = new MutationObserver(function () {
-        var f = formContainer.querySelector('iframe');
-        if (f && f.style.visibility !== 'hidden' && f.offsetHeight > 40) {
-          done();
-          obs.disconnect();
-        }
-      });
-      obs.observe(formContainer, {
-        childList: true, subtree: true,
-        attributes: true, attributeFilter: ['style', 'height', 'width']
-      });
-      setTimeout(function () { obs.disconnect(); fallback(); }, 10000);
-    } else {
-      setTimeout(fallback, 6000);
+    /* Le formulaire annonce sa hauteur : on ajuste, et on retire l'attente au
+       premier message reçu. On n'accepte QUE les messages venant de l'iframe
+       elle-même — une autre fenêtre ne peut pas dicter la hauteur. */
+    var prete = false;
+    function onMessage(e) {
+      if (!e.data || e.data.type !== FORM_HEIGHT_MESSAGE) return;
+      if (e.source !== frame.contentWindow) return;
+      if (typeof e.data.height !== 'number' || e.data.height <= 0) return;
+      frame.style.height = e.data.height + 'px';
+      if (!prete) { prete = true; done(); }
     }
+    window.addEventListener('message', onMessage);
+
+    /* Si rien n'arrive — réseau coupé, domaine non autorisé, formulaire fermé —
+       on propose WhatsApp plutôt que de laisser une boîte vide. */
+    setTimeout(function () {
+      if (!prete) {
+        window.removeEventListener('message', onMessage);
+        if (frame.parentNode) frame.parentNode.removeChild(frame);
+        fallback();
+      }
+    }, 10000);
   }
 
   /* Verrouillage du scroll compatible iOS : on fige le body en position
