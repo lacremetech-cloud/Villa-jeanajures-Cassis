@@ -27,7 +27,7 @@
      petits écrans, où elle pèse 2,7 Mo au lieu de 6,5. Les deux sont muettes
      (l'autoplay l'exige) et encodées en faststart, pour que la lecture
      démarre sans attendre la fin du téléchargement. */
-  /* Fond du hero, sur grand écran seulement. Le fichier est amputé de ses deux
+  /* Fond du hero, sur grand écran seulement. Le fichier est amputé de ses quatre
      premières secondes : le carton-titre du teaser s'y affichait derrière le
      titre de la page et rendait les deux illisibles. Couper plutôt que se
      positionner à la lecture, pour que la boucle reparte au bon endroit à
