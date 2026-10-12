@@ -27,12 +27,16 @@
      petits écrans, où elle pèse 2,7 Mo au lieu de 6,5. Les deux sont muettes
      (l'autoplay l'exige) et encodées en faststart, pour que la lecture
      démarre sans attendre la fin du téléchargement. */
-  var HERO_VIDEO = {
-    large:  [['assets/video/teaser-jean-jaures-720.webm', 'video/webm'],
-             ['assets/video/teaser-jean-jaures-720.mp4',  'video/mp4']],
-    etroit: [['assets/video/teaser-jean-jaures-480.webm', 'video/webm'],
-             ['assets/video/teaser-jean-jaures-480.mp4',  'video/mp4']]
-  };
+  /* Fond du hero, sur grand écran seulement. Le fichier est amputé de ses deux
+     premières secondes : le carton-titre du teaser s'y affichait derrière le
+     titre de la page et rendait les deux illisibles. Couper plutôt que se
+     positionner à la lecture, pour que la boucle reparte au bon endroit à
+     chaque tour. Sur petit écran, le fond reste la photo et la vidéo est
+     présentée telle quelle, en lecteur, sous le texte. */
+  var HERO_VIDEO = [
+    ['assets/video/fond-jean-jaures-720.webm', 'video/webm'],
+    ['assets/video/fond-jean-jaures-720.mp4',  'video/mp4']
+  ];
   var HERO_VIDEO_ID    = 'UE3kntZkW8o';     /* repli : Cassis vue du ciel — Polychronis Film */
   var HERO_VIDEO_START = 40;                /* secondes */
 
@@ -48,22 +52,19 @@
     /* Sans fichier propre au bien, le fond viendrait de YouTube : trop lourd
        et trop bavard pour un petit écran, on garde la photo. Avec un fichier,
        la version allégée est assez sobre pour être servie partout. */
-    if (!HERO_VIDEO && window.matchMedia('(max-width: 760px)').matches) return true;
+    if (window.matchMedia('(max-width: 1200px)').matches) return true;
     return false;
   }
 
   function mountFichier() {
     var v = document.createElement('video');
-    /* Le WebM d'abord : plus leger, lu par tout ce qui n'est pas un vieux
-       Safari, qui prend alors le MP4. Le navigateur choisit la premiere
-       source qu'il sait lire, on ne decide rien a sa place. */
-    var sources = window.matchMedia('(max-width: 760px)').matches
-      ? HERO_VIDEO.etroit
-      : HERO_VIDEO.large;
-    for (var i = 0; i < sources.length; i++) {
+    /* Le WebM d'abord : plus léger, lu par tout ce qui n'est pas un vieux
+       Safari, qui prend alors le MP4. Le navigateur choisit la première
+       source qu'il sait lire, on ne décide rien à sa place. */
+    for (var i = 0; i < HERO_VIDEO.length; i++) {
       var s = document.createElement('source');
-      s.src = sources[i][0];
-      s.type = sources[i][1];
+      s.src = HERO_VIDEO[i][0];
+      s.type = HERO_VIDEO[i][1];
       v.appendChild(s);
     }
     v.muted = true; v.defaultMuted = true;
@@ -227,6 +228,47 @@
   var closeEls = document.querySelectorAll('.js-close-modal');
   var scrollY = 0;
   var lastFocused = null;
+  /* ---------- Visite vidéo dans le flux (écrans étroits) ----------
+     iOS refuse parfois la lecture automatique au premier chargement : on la
+     relance au premier contact. Hors écran, on met en pause, par égard pour
+     la batterie. Les deux commandes sont les nôtres, celles du système
+     restant neutralisées par pointer-events: none. */
+  var visite = document.querySelector('.hero__shot video');
+  if (visite) {
+    var lancer = function () { var p = visite.play(); if (p && p.catch) p.catch(function () {}); };
+    lancer();
+    document.addEventListener('touchstart', lancer, { once: true, passive: true });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entrees) {
+        for (var i = 0; i < entrees.length; i++) {
+          if (entrees[i].isIntersecting) lancer();
+          else visite.pause();
+        }
+      }, { threshold: 0.25 }).observe(visite);
+    }
+
+    var bSon = document.querySelector('.js-son');
+    if (bSon) {
+      bSon.addEventListener('click', function () {
+        visite.muted = !visite.muted;
+        bSon.classList.toggle('is-audible', !visite.muted);
+        bSon.setAttribute('aria-label', visite.muted ? 'Activer le son' : 'Couper le son');
+        if (!visite.muted) lancer();
+      });
+    }
+
+    var bPlein = document.querySelector('.js-plein-ecran');
+    if (bPlein) {
+      bPlein.addEventListener('click', function () {
+        /* Safari iOS n'implémente le plein écran que sur l'élément vidéo. */
+        if (typeof visite.webkitEnterFullscreen === 'function') visite.webkitEnterFullscreen();
+        else if (typeof visite.requestFullscreen === 'function') visite.requestFullscreen().catch(function () {});
+        else if (typeof visite.webkitRequestFullscreen === 'function') visite.webkitRequestFullscreen();
+      });
+    }
+  }
+
   /* ---------- Formulaire Prodigio ----------
      L'iframe est écrit directement dans la modale, en loading="lazy" : il
      n'est chargé qu'à la première ouverture. Il annonce sa hauteur par
