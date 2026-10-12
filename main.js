@@ -11,7 +11,7 @@
 
      Deux sources possibles, dans cet ordre de préférence :
 
-     1. HERO_VIDEO_MP4 — un fichier servi depuis le dépôt. C'est la
+     1. HERO_VIDEO — des fichiers servis depuis le dépôt. C'est la
         meilleure option : pas de tiers, pas de logo, contrôle total du
         cadrage et de la boucle. À privilégier dès que des images
         propres au bien seront disponibles.
@@ -23,8 +23,17 @@
      Dans les deux cas la photo reste dessous : elle s'affiche tout de
      suite et prend le relais si la vidéo ne démarre pas.
      ===================================================================== */
-  var HERO_VIDEO_MP4   = '';                /* ex. 'assets/video/hero.mp4' */
-  var HERO_VIDEO_ID    = 'UE3kntZkW8o';     /* Cassis vue du ciel — Polychronis Film */
+  /* Teaser tourné pour le bien. Deux définitions : la légère est servie aux
+     petits écrans, où elle pèse 2,7 Mo au lieu de 6,5. Les deux sont muettes
+     (l'autoplay l'exige) et encodées en faststart, pour que la lecture
+     démarre sans attendre la fin du téléchargement. */
+  var HERO_VIDEO = {
+    large:  [['assets/video/teaser-jean-jaures-720.webm', 'video/webm'],
+             ['assets/video/teaser-jean-jaures-720.mp4',  'video/mp4']],
+    etroit: [['assets/video/teaser-jean-jaures-480.webm', 'video/webm'],
+             ['assets/video/teaser-jean-jaures-480.mp4',  'video/mp4']]
+  };
+  var HERO_VIDEO_ID    = 'UE3kntZkW8o';     /* repli : Cassis vue du ciel — Polychronis Film */
   var HERO_VIDEO_START = 40;                /* secondes */
 
   var heroVideo = document.getElementById('heroVideo');
@@ -34,15 +43,29 @@
        on garde la photo, qui est plus légère et tout aussi juste. */
     if (!heroVideo) return true;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
-    if (window.matchMedia('(max-width: 760px)').matches) return true;
     var c = navigator.connection;
     if (c && (c.saveData || /^(slow-)?2g$/.test(c.effectiveType || ''))) return true;
+    /* Sans fichier propre au bien, le fond viendrait de YouTube : trop lourd
+       et trop bavard pour un petit écran, on garde la photo. Avec un fichier,
+       la version allégée est assez sobre pour être servie partout. */
+    if (!HERO_VIDEO && window.matchMedia('(max-width: 760px)').matches) return true;
     return false;
   }
 
-  function mountMp4() {
+  function mountFichier() {
     var v = document.createElement('video');
-    v.src = HERO_VIDEO_MP4;
+    /* Le WebM d'abord : plus leger, lu par tout ce qui n'est pas un vieux
+       Safari, qui prend alors le MP4. Le navigateur choisit la premiere
+       source qu'il sait lire, on ne decide rien a sa place. */
+    var sources = window.matchMedia('(max-width: 760px)').matches
+      ? HERO_VIDEO.etroit
+      : HERO_VIDEO.large;
+    for (var i = 0; i < sources.length; i++) {
+      var s = document.createElement('source');
+      s.src = sources[i][0];
+      s.type = sources[i][1];
+      v.appendChild(s);
+    }
     v.muted = true; v.defaultMuted = true;
     v.loop = true; v.autoplay = true; v.playsInline = true;
     v.setAttribute('playsinline', '');
@@ -93,7 +116,7 @@
   }
 
   if (!prefersStillImage()) {
-    if (HERO_VIDEO_MP4) mountMp4();
+    if (HERO_VIDEO) mountFichier();
     else if (HERO_VIDEO_ID) mountYouTube();
   }
 
