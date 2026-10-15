@@ -6,7 +6,7 @@
 # la page réellement servie au contenu de la branche déclarée dans LIVRAISON.md.
 set -u
 
-BRANCHE="${1:-claude/cambre-aze-website-11mi7q}"
+BRANCHE="${1:-main}"
 URL="${2:-https://REMPLACER-PAR-L-ADRESSE}"
 
 echo "Branche déclarée : $BRANCHE"

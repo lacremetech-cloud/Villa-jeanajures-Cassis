@@ -8,11 +8,21 @@ en ligne. Il répond en premier, et on le tient à jour.
 | | |
 |---|---|
 | **Projet** | Landing Villa Jean Jaurès |
-| **Branche servie par Vercel** | `claude/cambre-aze-website-11mi7q` |
-| **Adresse publique** | (à confirmer — l'adresse publique n'a pas été retrouvée) |
+| **Branche servie par Vercel** | `main` |
+| **Adresse publique** | à confirmer — `villa-jeanajures-cassis.vercel.app` répond 404, deux autres domaines existent |
 
 **Pousser sur cette branche déploie.** Pousser ailleurs ne déploie rien — y
 compris sur `main` si ce n'est pas la branche ci-dessus.
+
+## Une confusion à ne pas refaire
+
+La branche par défaut de **GitHub** et la branche de production de **Vercel**
+sont deux réglages distincts, qui peuvent différer. Ici, GitHub pointait sur
+`claude/cambre-aze-website-11mi7q` tandis que Vercel déployait `main` — ce qui
+a été lu de travers une fois.
+
+**Seul le réglage Vercel compte** pour savoir ce qui est en ligne :
+*Project Settings → Environments → Production → Branch Tracking*.
 
 ## Vérifier ce qui est réellement en ligne
 
