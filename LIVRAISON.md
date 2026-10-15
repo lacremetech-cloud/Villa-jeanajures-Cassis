@@ -9,10 +9,20 @@ en ligne. Il répond en premier, et on le tient à jour.
 |---|---|
 | **Projet** | Landing Villa Jean Jaurès |
 | **Branche servie par Vercel** | `main` |
-| **Adresse publique** | à confirmer — `villa-jeanajures-cassis.vercel.app` répond 404, deux autres domaines existent |
+| **Adresse publique** | https://villa-jeanjaures-cassis.vercel.app |
 
 **Pousser sur cette branche déploie.** Pousser ailleurs ne déploie rien — y
 compris sur `main` si ce n'est pas la branche ci-dessus.
+
+## Attention au nom du dépôt
+
+Le dépôt GitHub s'appelle `Villa-jeanajures-Cassis` — avec une coquille,
+« jean**a**jures ». Le domaine Vercel, lui, est correctement orthographié :
+`villa-jean**j**aures-cassis.vercel.app`.
+
+`villa-jeanajures-cassis.vercel.app`, construit par réflexe depuis le nom du
+dépôt, répond **404**. C'est exactement l'erreur commise une fois, qui a fait
+croire que le site n'était pas en ligne.
 
 ## Une confusion à ne pas refaire
 

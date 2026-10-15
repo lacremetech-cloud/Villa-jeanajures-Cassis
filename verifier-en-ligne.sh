@@ -7,7 +7,7 @@
 set -u
 
 BRANCHE="${1:-main}"
-URL="${2:-https://REMPLACER-PAR-L-ADRESSE}"
+URL="${2:-https://villa-jeanjaures-cassis.vercel.app}"
 
 echo "Branche déclarée : $BRANCHE"
 echo "Adresse          : $URL"
